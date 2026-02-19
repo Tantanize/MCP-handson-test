@@ -70,16 +70,16 @@ An Azure Storage Emulator is needed for this particular sample because we will s
    func start
    ```
 
-> **Note** by default this will use the webhooks route: `/runtime/webhooks/mcp/sse`.  Later we will use this in Azure to set the key on client/host calls: `/runtime/webhooks/mcp/sse?code=<system_key>`
+> **Note** by default this will use the webhooks route: `/runtime/webhooks/mcp`.  Later we will use this in Azure to set the key on client/host calls: `/runtime/webhooks/mcp?code=<system_key>`
 
 ## Connect to the *local* MCP server from a client/host
 
 ### VS Code - Copilot agent mode
 
-1. **Add MCP Server** from command palette and add URL to your running Function app's SSE endpoint:
+1. **Add MCP Server** from command palette and add URL to your running Function app's MCP endpoint:
 
     ```shell
-    http://0.0.0.0:7071/runtime/webhooks/mcp/sse
+    http://0.0.0.0:7071/runtime/webhooks/mcp
     ```
 
 1. **List MCP Servers** from command palette and start the server
@@ -110,11 +110,11 @@ An Azure Storage Emulator is needed for this particular sample because we will s
     ```
 
 2. CTRL click to load the MCP Inspector web app from the URL displayed by the app (e.g. http://0.0.0.0:5173/#resources)
-3. Set the transport type to `SSE`
-4. Set the URL to your running Function app's SSE endpoint and **Connect**:
+3. Set the transport type to `Streamable HTTP`
+4. Set the URL to your running Function app's MCP endpoint and **Connect**:
 
     ```shell
-    http://0.0.0.0:7071/runtime/webhooks/mcp/sse
+    http://0.0.0.0:7071/runtime/webhooks/mcp
     ```
 
 >**Note** this step will not work in CodeSpaces.  Please move on to Deploy to Remote MCP.  
@@ -151,7 +151,13 @@ This verification step ensures your MCP server is correctly interacting with the
 
 ## Deploy to Azure for Remote MCP
 
-Run this [azd](https://aka.ms/azd) command to provision the function app, with any required Azure resources, and deploy your code:
+In the root directory, create a new [azd](https://aka.ms/azd) environment. This is going to become the resource group of your Azure resources: 
+
+```shell
+azd env new <reource-group-name>
+```
+
+Run this azd command to provision the function app, with any required Azure resources, and deploy your code:
 
 ```shell
 azd up
@@ -163,20 +169,20 @@ You can opt-in to a VNet being used in the sample. To do so, do this before `azd
 azd env set VNET_ENABLED true
 ```
 
-Additionally, [API Management]() can be used for improved security and policies over your MCP Server, and [App Service built-in authentication](https://learn.microsoft.com/azure/app-service/overview-authentication-authorization) can be used to set up your favorite OAuth provider including Entra.  
+Additionally, [API Management](https://aka.ms/mcp-remote-apim-auth) can be used for improved security and policies over your MCP Server, and [App Service built-in authentication](https://learn.microsoft.com/azure/app-service/overview-authentication-authorization) can be used to set up your favorite OAuth provider including Entra.  
 
 ## Connect to your *remote* MCP server function app from a client
 
-Your client will need a key in order to invoke the new hosted SSE endpoint, which will be of the form `https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp/sse`. The hosted function requires a system key by default which can be obtained from the [portal](https://learn.microsoft.com/azure/azure-functions/function-keys-how-to?tabs=azure-portal) or the CLI (`az functionapp keys list --resource-group <resource_group> --name <function_app_name>`). Obtain the system key named `mcp_extension`.
+Your client will need a key in order to invoke the new hosted MCP endpoint, which will be of the form `https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp`. The hosted function requires a system key by default which can be obtained from the [portal](https://learn.microsoft.com/azure/azure-functions/function-keys-how-to?tabs=azure-portal) or the CLI (`az functionapp keys list --resource-group <resource_group> --name <function_app_name>`). Obtain the system key named `mcp_extension`.
 
 ### Connect to remote MCP server in MCP Inspector
 For MCP Inspector, you can include the key in the URL: 
 ```plaintext
-https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp/sse?code=<your-mcp-extension-system-key>
+https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp?code=<your-mcp-extension-system-key>
 ```
 
 ### Connect to remote MCP server in VS Code - GitHub Copilot
-For GitHub Copilot within VS Code, you should instead set the key as the `x-functions-key` header in `mcp.json`, and you would just use `https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp/sse` for the URL. The following example uses an input and will prompt you to provide the key when you start the server from VS Code.  Note [mcp.json](.vscode/mcp.json) has already been included in this repo and will be picked up by VS Code.  Click Start on the server to be prompted for values including `functionapp-name` (in your /.azure/*/.env file) and `functions-mcp-extension-system-key` which can be obtained from CLI command above or API Keys in the portal for the Function App.  
+For GitHub Copilot within VS Code, you should instead set the key as the `x-functions-key` header in `mcp.json`, and you would just use `https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp` for the URL. The following example uses an input and will prompt you to provide the key when you start the server from VS Code.  Note [mcp.json](.vscode/mcp.json) has already been included in this repo and will be picked up by VS Code.  Click Start on the server to be prompted for values including `functionapp-name` (in your /.azure/*/.env file) and `functions-mcp-extension-system-key` which can be obtained from CLI command above or API Keys in the portal for the Function App.  
 
 ```json
 {
@@ -195,23 +201,23 @@ For GitHub Copilot within VS Code, you should instead set the key as the `x-func
     ],
     "servers": {
         "remote-mcp-function": {
-            "type": "sse",
-            "url": "https://${input:functionapp-name}.azurewebsites.net/runtime/webhooks/mcp/sse",
+            "type": "http",
+            "url": "https://${input:functionapp-name}.azurewebsites.net/runtime/webhooks/mcp",
             "headers": {
                 "x-functions-key": "${input:functions-mcp-extension-system-key}"
             }
         },
         "local-mcp-function": {
-            "type": "sse",
-            "url": "http://0.0.0.0:7071/runtime/webhooks/mcp/sse"
+            "type": "http",
+            "url": "http://0.0.0.0:7071/runtime/webhooks/mcp"
         }
     }
 }
 ```
 
-For MCP Inspector, you can include the key in the URL: `https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp/sse?code=<your-mcp-extension-system-key>`.
+For MCP Inspector, you can include the key in the URL: `https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp?code=<your-mcp-extension-system-key>`.
 
-For GitHub Copilot within VS Code, you should instead set the key as the `x-functions-key` header in `mcp.json`, and you would just use `https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp/sse` for the URL. The following example uses an input and will prompt you to provide the key when you start the server from VS Code:
+For GitHub Copilot within VS Code, you should instead set the key as the `x-functions-key` header in `mcp.json`, and you would just use `https://<funcappname>.azurewebsites.net/runtime/webhooks/mcp` for the URL. The following example uses an input and will prompt you to provide the key when you start the server from VS Code:
 
 ```json
 {
@@ -225,8 +231,8 @@ For GitHub Copilot within VS Code, you should instead set the key as the `x-func
     ],
     "servers": {
         "my-mcp-server": {
-            "type": "sse",
-            "url": "<funcappname>.azurewebsites.net/runtime/webhooks/mcp/sse",
+            "type": "http",
+            "url": "<funcappname>.azurewebsites.net/runtime/webhooks/mcp",
             "headers": {
                 "x-functions-key": "${input:functions-mcp-extension-system-key}"
             }
@@ -272,94 +278,220 @@ azd deploy
 
 ## Source Code
 
-The function code for the `get_snippet` and `save_snippet` endpoints are defined in the Python files in the `src` directory. The MCP function annotations expose these functions as MCP Server tools.
+The function code for the `get_snippet` and `save_snippet` endpoints are defined in the Python files in the `src` directory. The MCP function decorators expose these functions as MCP Server tools.
+
+This sample uses the new first-class MCP decorators available in `azure-functions>=1.25.0b2`, which dramatically simplify the code by:
+- Inferring tool properties directly from function signatures and type hints
+- Eliminating the need for manual JSON serialization of tool properties
+- Using standard Python decorators (`@app.mcp_tool()`, `@app.mcp_tool_property()`, `@app.blob_input()`, `@app.blob_output()`)
+
+**Important:** When using the MCP decorators, you must set `PYTHON_ISOLATE_WORKER_DEPENDENCIES=1` in your app settings (both locally in `local.settings.json` and in your deployed Azure Function App).
 
 Here's the actual code from the function_app.py file:
 
 ```python
-
-@app.generic_trigger(arg_name="context", type="mcpToolTrigger", toolName="hello", 
-                     description="Hello world.", 
-                     toolProperties="[]")
-def hello_mcp(context) -> None:
-    """
-    A simple function that returns a greeting message.
-
-    Args:
-        context: The trigger context (not used in this function).
-
-    Returns:
-        str: A greeting message.
-    """
+@app.mcp_tool()
+def hello_mcp() -> str:
+    """Hello world."""
     return "Hello I am MCPTool!"
 
 
-@app.generic_trigger(
-    arg_name="context",
-    type="mcpToolTrigger",
-    toolName="getsnippet",
-    description="Retrieve a snippet by name.",
-    toolProperties=tool_properties_get_snippets_json
-)
-@app.generic_input_binding(
-    arg_name="file",
-    type="blob",
-    connection="AzureWebJobsStorage",
-    path=_BLOB_PATH
-)
-def get_snippet(file: func.InputStream, context) -> str:
-    """
-    Retrieves a snippet by name from Azure Blob Storage.
- 
-    Args:
-        file (func.InputStream): The input binding to read the snippet from Azure Blob Storage.
-        context: The trigger context containing the input arguments.
- 
-    Returns:
-        str: The content of the snippet or an error message.
-    """
+@app.mcp_tool()
+@app.mcp_tool_property(arg_name="snippetname", description="The name of the snippet.")
+@app.blob_input(arg_name="file", connection="AzureWebJobsStorage", path=_BLOB_PATH)
+def get_snippet(file: func.InputStream, snippetname: str) -> str:
+    """Retrieve a snippet by name from Azure Blob Storage."""
     snippet_content = file.read().decode("utf-8")
     logging.info(f"Retrieved snippet: {snippet_content}")
     return snippet_content
 
 
-@app.generic_trigger(
-    arg_name="context",
-    type="mcpToolTrigger",
-    toolName="savesnippet",
-    description="Save a snippet with a name.",
-    toolProperties=tool_properties_save_snippets_json
-)                   
-@app.generic_output_binding(
-    arg_name="file",
-    type="blob",
-    connection="AzureWebJobsStorage",
-    path=_BLOB_PATH
-)
-def save_snippet(file: func.Out[str], context) -> str:
-    content = json.loads(context)
-    snippet_name_from_args = content["arguments"][_SNIPPET_NAME_PROPERTY_NAME]
-    snippet_content_from_args = content["arguments"][_SNIPPET_PROPERTY_NAME]
-
-    if not snippet_name_from_args:
+@app.mcp_tool()
+@app.mcp_tool_property(arg_name="snippetname", description="The name of the snippet.")
+@app.mcp_tool_property(arg_name="snippet", description="The content of the snippet.")
+@app.blob_output(arg_name="file", connection="AzureWebJobsStorage", path=_BLOB_PATH)
+def save_snippet(file: func.Out[str], snippetname: str, snippet: str) -> str:
+    """Save a snippet with a name to Azure Blob Storage."""
+    if not snippetname:
         return "No snippet name provided"
 
-    if not snippet_content_from_args:
+    if not snippet:
         return "No snippet content provided"
- 
-    file.set(snippet_content_from_args)
-    logging.info(f"Saved snippet: {snippet_content_from_args}")
-    return f"Snippet '{snippet_content_from_args}' saved successfully"
+
+    file.set(snippet)
+    logging.info(f"Saved snippet: {snippet}")
+    return f"Snippet '{snippet}' saved successfully"
 ```
 
-Note that the `host.json` file also includes a reference to the experimental bundle, which is required for apps using this feature:
+Note that the `host.json` file also includes a reference to the _preview_ extension bundle, which is required for apps using this feature now:
 
 ```json
 "extensionBundle": {
-  "id": "Microsoft.Azure.Functions.ExtensionBundle.Experimental",
-  "version": "[4.*, 5.0.0)"
+  "id": "Microsoft.Azure.Functions.ExtensionBundle.Preview",
+  "version": "[4.32.0, 5.0.0)"
 }
 ```
+
+## Weather App Sample
+
+A sample MCP App that displays weather information with an interactive UI.
+
+### What Are MCP Apps?
+
+[MCP Apps](https://blog.modelcontextprotocol.io/posts/2026-01-26-mcp-apps/) let tools return interactive interfaces instead of plain text. When a tool declares a UI resource, the host renders it in a sandboxed iframe where users can interact directly.
+
+#### MCP Apps = Tool + UI Resource
+
+The architecture relies on two MCP primitives:
+
+1. **Tools** with UI metadata pointing to a resource URI
+2. **Resources** containing bundled HTML/JavaScript served via the `ui://` scheme
+
+Azure Functions makes it easy to build both.
+
+### Prerequisites for Weather App
+
+- [Python](https://www.python.org/downloads/) version 3.11 or higher
+- [Node.js](https://nodejs.org/) (for building the UI)
+- [Azure Functions Core Tools v4](https://learn.microsoft.com/azure/azure-functions/functions-run-local)
+- An MCP-compatible host (Claude Desktop, VS Code, ChatGPT, etc.)
+
+### Getting Started with Weather App
+
+#### 1. Build the UI
+
+The UI must be bundled before running the function app:
+
+```bash
+cd src/app
+npm install
+npm run build
+cd ../
+```
+
+This creates a bundled `src/app/dist/index.html` file that the function serves.
+
+#### 2. Run the Function App
+
+In the `src` directory, run: 
+
+```bash
+func start
+```
+
+The MCP server will be available at `http://localhost:7071/runtime/webhooks/mcp`.
+
+#### 3. Connect from VS Code
+
+Open **.vscode/mcp.json**. Find the server called _local-mcp-function_ and click **Start** above the name. The server is already set up with the running Function app's MCP endpoint:
+
+```shell
+http://localhost:7071/runtime/webhooks/mcp
+```
+
+#### 4. Prompt the Agent
+
+Ask Copilot: "What's the weather in Seattle?"
+
+### Weather App Source Code
+
+The source code is in [src/function_app.py](src/function_app.py). The key concept is how **tools connect to resources via metadata**.
+
+#### The Tool with UI Metadata
+
+The `get_weather` tool uses the `metadata` parameter in `@app.mcp_tool()` to declare it has an associated UI:
+
+```python
+# Required metadata
+TOOL_METADATA = '{"ui": {"resourceUri": "ui://weather/index.html"}}'
+
+@app.mcp_tool()
+@app.mcp_tool_property(arg_name="location", description="City name to check weather for (e.g., Seattle, New York, Miami)")
+def get_weather(location: str) -> Dict[str, Any]:
+    """Returns current weather for a location via Open-Meteo."""
+    logging.info(f"Getting weather for location: {location}")
+    
+    try:
+        result = weather_service.get_current_weather(location)
+        
+        if "TemperatureC" in result:
+            logging.info(f"Weather fetched for {result['Location']}: {result['TemperatureC']}°C")
+        else:
+            logging.warning(f"Weather error for {result['Location']}: {result.get('Error', 'Unknown error')}")
+        
+        return result
+    except Exception as e:
+        logging.error(f"Failed to get weather for {location}: {e}")
+        return {
+            "Location": location or "Unknown",
+            "Error": f"Unable to fetch weather: {str(e)}",
+            "Source": "api.open-meteo.com"
+        }
+```
+
+The `resourceUri` points to `ui://weather/index.html`— this tells the MCP host that when this tool is invoked, there's an interactive UI available at that resource URI.
+
+#### The Resource Serving the UI
+
+The `get_weather_widget` function serves the bundled HTML at the matching URI:
+
+```python
+# Optional UI metadata
+RESOURCE_METADATA = '{"ui": {"prefersBorder": true}}'
+
+@app.mcp_resource_trigger(
+    arg_name="context",
+    uri=WEATHER_WIDGET_URI,
+    resource_name=WEATHER_WIDGET_NAME,
+    description=WEATHER_WIDGET_DESCRIPTION,
+    mime_type=WEATHER_WIDGET_MIME_TYPE,
+    metadata=RESOURCE_METADATA
+)
+def get_weather_widget(context) -> str:
+    """Get the weather widget HTML content."""
+    logging.info("Getting weather widget")
+    
+    try:
+        # Get the path to the widget HTML file
+        current_dir = Path(__file__).parent
+        file_path = current_dir / "app" / "dist" / "index.html"
+        
+        if file_path.exists():
+            return file_path.read_text(encoding="utf-8")
+        else:
+            # Return a fallback HTML if file not found
+            return """<!DOCTYPE html>
+<html>
+<head><title>Weather Widget</title></head>
+<body>
+  <h1>Weather Widget</h1>
+  <p>Widget content not found. Please ensure the app/dist/index.html file exists.</p>
+</body>
+</html>"""
+    except Exception as e:
+        logging.error(f"Error reading weather widget file: {e}")
+        return """<!DOCTYPE html>
+<html>
+<head><title>Weather Widget Error</title></head>
+<body>
+  <h1>Weather Widget</h1>
+  <p>Error loading widget content.</p>
+</body>
+</html>"""
+```
+
+#### How It Works Together
+
+1. User asks: "What's the weather in Seattle?"
+2. Agent calls the `get_weather` tool
+3. Tool returns weather data (JSON) **and** the host sees the `ui.resourceUri` metadata
+4. Host fetches the UI resource from `ui://weather/index.html`
+5. Host renders the HTML in a sandboxed iframe, passing the tool result as context
+6. User sees an interactive weather widget instead of plain text
+
+#### The UI (TypeScript)
+
+The frontend in `src/app/src/weather-app.ts` receives the tool result and renders the weather display. It's bundled with Vite into a single `index.html` that the resource serves.
 
 ## Next Steps
 
