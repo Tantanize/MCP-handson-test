@@ -166,14 +166,25 @@ def some_tool(file: func.Out[str], ...) -> str:
 
 ### 6. get_reservation_details
 1. **入力検証**
-   - `reservation_id` の文字列チェック。
-   - パラメータ不在の場合は全件取得モード。
-2. **データ読み込み**
-   - `reservations.jsonl` を読み込み、必要に応じてフィルタリング。
+   - `reservation_id` は非空文字列。未指定または空文字列の場合は `-32602`（`"reservation_id is required"`）を返す。
+   - `reservation_pw` は非空文字列。未指定または空文字列の場合は `-32602`（`"reservation_pw is required"`）を返す。
+2. **予約データ読み込み**
+   - Azure Blob (`movies/reservations.jsonl`) を `@app.blob_input` バインディングで読み込む。
+   - Blob が空または読み取り失敗の場合は空文字列として扱う。
+   - 行単位で JSON パースし、`reservation_id` が一致するレコードを検索。
 3. **存在確認**
-   - 指定IDが見つからない場合は `-32602`。
-4. **レスポンス出力**
-   - 取得した予約リストを返す。エラーがあればコードと説明を付与。
+   - 指定 ID の予約が見つからない場合は `404`（`"Reservation not found"`）を返す。
+4. **パスワード検証**
+   - 入力の `reservation_pw` を `hashlib.sha256` でハッシュ化し、保存済みの `reservation_pw_hash` と比較。
+   - 不一致の場合は `403`（`"Forbidden"`, `"Invalid reservation password"`）を返す。
+   - パスワードをログに出力しない。
+5. **映画・スケジュール情報付与**
+   - Azure Blob (`movies/schedules.json`) を `@app.blob_input` バインディングで読み込み、`schedule_id` に一致するスケジュールを取得。
+   - Azure Blob (`movies/movies.json`) を `@app.blob_input` バインディングで読み込み、`movie_id` に一致する映画を取得。
+   - スケジュールが見つからない場合は空オブジェクトをデフォルトとする。
+6. **レスポンス出力**
+   - 成功時は `{reservation_id, movie: {movie_id, title}, schedule: {schedule_id, date, start_time, theater_id, theater_name}, reservation_seats, reservation_time, status}` を返す。
+   - エラー時は `{"error": {"code": <code>, "message": "...", "data": "..."}}` の JSON-RPC エラーオブジェクト。
 
 ---
 

@@ -616,3 +616,105 @@ def get_movie_popularity(
 
     return json.dumps({"popularity_ranking": ranking})
 
+
+# ---------------------------------------------------------------------------
+# Reservation details tool implementation
+# ---------------------------------------------------------------------------
+
+
+@app.mcp_tool()
+@app.mcp_tool_property(arg_name="reservation_id", description="予約ID")
+@app.mcp_tool_property(arg_name="reservation_pw", description="Reservation password (plaintext)")
+@app.blob_input(arg_name="reservations_blob", connection="AzureWebJobsStorage", path=_RESERVATIONS_BLOB_PATH)
+@app.blob_input(arg_name="schedules_blob", connection="AzureWebJobsStorage", path=_SCHEDULES_BLOB_PATH)
+@app.blob_input(arg_name="movies_blob", connection="AzureWebJobsStorage", path=_MOVIES_BLOB_PATH)
+def get_reservation_details(
+    reservations_blob: func.InputStream,
+    schedules_blob: func.InputStream,
+    movies_blob: func.InputStream,
+    reservation_id: str,
+    reservation_pw: str,
+) -> str:
+    """予約 ID とパスワードで予約詳細を取得します。パスワード検証必須。"""
+    def err(code: int, msg: str, data=None):
+        body = {"error": {"code": code, "message": msg}}
+        if data is not None:
+            body["error"]["data"] = data
+        return json.dumps(body)
+
+    # 1. Input validation
+    if not reservation_id or not isinstance(reservation_id, str):
+        return err(-32602, "reservation_id is required")
+    if not reservation_pw or not isinstance(reservation_pw, str):
+        return err(-32602, "reservation_pw is required")
+
+    # 2. Load reservations from Blob
+    try:
+        raw = reservations_blob.read().decode("utf-8") if reservations_blob else ""
+    except Exception:
+        raw = ""
+
+    record = None
+    for line in raw.strip().splitlines():
+        if not line.strip():
+            continue
+        try:
+            rec = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if rec.get("reservation_id") == reservation_id:
+            record = rec
+            break
+
+    # 3. Existence check
+    if record is None:
+        return err(404, "Reservation not found")
+
+    # 4. Password verification
+    pw_hash = hashlib.sha256(reservation_pw.encode("utf-8")).hexdigest()
+    if pw_hash != record.get("reservation_pw_hash", ""):
+        return err(403, "Forbidden", "Invalid reservation password")
+
+    # 5. Enrich with movie and schedule info
+    schedule_id = record.get("schedule_id", "")
+
+    try:
+        schedules = json.loads(schedules_blob.read().decode("utf-8")) if schedules_blob else []
+    except Exception:
+        schedules = []
+
+    schedule_info = {}
+    movie_id = ""
+    for sch in schedules:
+        if sch.get("schedule_id") == schedule_id:
+            schedule_info = {
+                "schedule_id": sch.get("schedule_id"),
+                "date": sch.get("date"),
+                "start_time": sch.get("start_time"),
+                "theater_id": sch.get("theater_id"),
+                "theater_name": sch.get("theater_name"),
+            }
+            movie_id = sch.get("movie_id", "")
+            break
+
+    try:
+        movies = json.loads(movies_blob.read().decode("utf-8")) if movies_blob else []
+    except Exception:
+        movies = []
+
+    movie_info = {"movie_id": movie_id, "title": ""}
+    for m in movies:
+        if m.get("movie_id") == movie_id:
+            movie_info = {"movie_id": movie_id, "title": m.get("title", "")}
+            break
+
+    # 6. Build response
+    return json.dumps({
+        "reservation_id": record.get("reservation_id"),
+        "movie": movie_info,
+        "schedule": schedule_info,
+        "reservation_seats": record.get("reservation_seats", []),
+        "reservation_time": record.get("reservation_time", ""),
+        "status": record.get("status", ""),
+    })
+
