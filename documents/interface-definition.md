@@ -1,4 +1,4 @@
-# インタフェース仕様書（MCP ツール群）
+# MCP Tool Interface Specification
 
 ## 概要
 
@@ -31,15 +31,15 @@
       "date": {
         "type": "string",
         "format": "date",
-        "description": "検索対象の日付（YYYY-MM-DD形式。省略時は本日を基準）"
+        "description": "Target date for lookup (YYYY-MM-DD). Defaults to today if omitted."
       },
       "query": {
         "type": "string",
-        "description": "映画名による検索テキスト（部分一致対応。映画名の揺れを許容）"
+        "description": "Search text for movie title (supports partial matches, allowing title variations)."
       },
       "limit": {
         "type": "integer",
-        "description": "返却する最大件数（デフォルト: 20）"
+        "description": "Maximum number of results to return (default: 20)."
       }
     },
     "required": []
@@ -54,12 +54,12 @@
           "properties": {
             "movie_id": { "type": "string", "description": "映画ID" },
             "title": { "type": "string", "description": "映画タイトル" },
-            "genre": { "type": "string", "description": "ジャンル（例: SF, 恋愛, 冒険）" },
-            "duration": { "type": "integer", "description": "上映時間（分）" },
-            "rating": { "type": "number", "description": "評価スコア（1.0-5.0）" },
-            "description": { "type": "string", "description": "映画の概要" },
-            "release_date": { "type": "string", "format": "date", "description": "公開日（YYYY-MM-DD形式）" },
-            "recommended": { "type": "boolean", "description": "推薦フラグ（評価・人気度が高い場合など）" }
+            "genre": { "type": "string", "description": "Genre (e.g., SF, Romance, Adventure)" },
+            "duration": { "type": "integer", "description": "Duration in minutes" },
+            "rating": { "type": "number", "description": "Rating score (1.0-5.0)" },
+            "description": { "type": "string", "description": "Description of the movie" },
+            "release_date": { "type": "string", "format": "date", "description": "Release date (YYYY-MM-DD format)" },
+            "recommended": { "type": "boolean", "description": "Recommendation flag (e.g., high rating or popularity)" }
           },
           "required": ["movie_id", "title", "rating"]
         }
@@ -151,12 +151,12 @@
     "properties": {
       "movie_id": {
         "type": "string",
-        "description": "対象の映画ID"
+        "description": "ID of the target movie"
       },
       "date": {
         "type": "string",
         "format": "date",
-        "description": "検索対象の日付（YYYY-MM-DD形式。省略時は本日以降7日間）"
+        "description": "Date to search (YYYY-MM-DD). Defaults to next 7 days if omitted."
       }
     },
     "required": ["movie_id"]
@@ -170,13 +170,13 @@
           "type": "object",
           "properties": {
             "schedule_id": { "type": "string", "description": "上映スケジュールID" },
-            "date": { "type": "string", "format": "date", "description": "上映日（YYYY-MM-DD形式）" },
+            "date": { "type": "string", "format": "date", "description": "Date of the showing (YYYY-MM-DD)" },
             "start_time": { "type": "string", "description": "開始時刻（HH:MM形式）" },
-            "end_time": { "type": "string", "description": "終了時刻（HH:MM形式）" },
+            "end_time": { "type": "string", "description": "End time (HH:MM)" },
             "theater_id": { "type": "string", "description": "上映館ID" },
             "theater_name": { "type": "string", "description": "上映館名" },
-            "available_seats_count": { "type": "integer", "description": "空き座席数" },
-            "total_seats_count": { "type": "integer", "description": "全座席数" }
+            "available_seats_count": { "type": "integer", "description": "Number of available seats" },
+            "total_seats_count": { "type": "integer", "description": "Total number of seats" }
           },
           "required": ["schedule_id", "date", "start_time", "theater_id", "available_seats_count"]
         }
@@ -254,11 +254,11 @@
       "date": {
         "type": "string",
         "format": "date",
-        "description": "集計対象日（YYYY-MM-DD形式。省略時は本日）"
+        "description": "Date to aggregate on (YYYY-MM-DD). Defaults to today."
       },
       "top_n": {
         "type": "integer",
-        "description": "上位 N 件を返却（省略時は全件）"
+        "description": "Return top N items (omit for all)."
       }
     },
     "required": []
@@ -273,9 +273,9 @@
           "properties": {
             "movie_id": { "type": "string", "description": "映画ID" },
             "title": { "type": "string", "description": "映画タイトル" },
-            "booked_seats_count": { "type": "integer", "description": "既予約座席数（入場者数推定）" },
-            "popularity_rank": { "type": "integer", "description": "人気度順位" },
-            "popularity_score": { "type": "number", "description": "人気度スコア（0-100）" }
+            "booked_seats_count": { "type": "integer", "description": "Number of seats already booked (estimated attendance)" },
+            "popularity_rank": { "type": "integer", "description": "Popularity rank" },
+            "popularity_score": { "type": "number", "description": "Popularity score (0-100)" }
           },
           "required": ["movie_id", "title", "booked_seats_count", "popularity_rank"]
         }
@@ -346,7 +346,7 @@
     "properties": {
       "schedule_id": {
         "type": "string",
-        "description": "対象の上映スケジュールID"
+        "description": "Target schedule ID"
       }
     },
     "required": ["schedule_id"]
@@ -360,20 +360,20 @@
         "items": {
           "type": "object",
           "properties": {
-            "seat_id": { "type": "string", "description": "座席ID（例: A1, B5）" },
-            "row": { "type": "string", "description": "行（A, B, C...）" },
-            "column": { "type": "integer", "description": "列（1, 2, 3...）" },
+            "seat_id": { "type": "string", "description": "Seat ID (e.g., A1, B5)" },
+            "row": { "type": "string", "description": "Row (A, B, C...)" },
+            "column": { "type": "integer", "description": "Column (1, 2, 3...)" },
             "status": {
               "type": "string",
               "enum": ["available", "reserved", "blocked"],
-              "description": "座席状態: available=空き, reserved=予約済み, blocked=使用不可"
+              "description": "Seat status: available, reserved, or blocked"
             }
           },
           "required": ["seat_id", "row", "column", "status"]
         }
       },
-      "available_count": { "type": "integer", "description": "空き座席総数" },
-      "reserved_count": { "type": "integer", "description": "予約済み座席総数" }
+      "available_count": { "type": "integer", "description": "Total available seats" },
+      "reserved_count": { "type": "integer", "description": "Total reserved seats" }
     },
     "required": ["schedule_id", "seats", "available_count"]
   }
@@ -442,36 +442,36 @@
         "type": "string",
         "description": "上映スケジュールID"
       },
-      "seats": {
+      "reservation_seats": {
         "type": "array",
         "items": { "type": "string" },
-        "description": "予約座席IDのリスト（例: [\"A1\", \"A2\"]）"
+        "description": "List of seat IDs to reserve (e.g., [\"A1\", \"A2\"])"
       },
-      "reservation_password": {
+      "reservation_pw": {
         "type": "string",
-        "description": "予約確認用パスワード（プレーンテキスト、保存時にハッシュ化）"
+        "description": "Reservation password (plaintext; hashed when stored)"
       },
       "customer_name": {
         "type": "string",
-        "description": "顧客名（オプション）"
+        "description": "Customer name (optional)"
       }
     },
-    "required": ["schedule_id", "seats", "reservation_password"]
+    "required": ["schedule_id", "reservation_seats", "reservation_pw"]
   },
   "outputSchema": {
     "type": "object",
     "properties": {
       "reservation_id": { "type": "string", "description": "予約ID" },
-      "reservation_password_hash": { "type": "string", "description": "パスワードのハッシュ値（検証用）" },
-      "reserved_seats": { "type": "array", "items": { "type": "string" }, "description": "確保された座席IDリスト" },
+      "reservation_pw_hash": { "type": "string", "description": "Hash of reservation password (for verification)" },
+      "reservation_seats": { "type": "array", "items": { "type": "string" }, "description": "List of seats that were successfully reserved" },
       "reservation_time": { "type": "string", "format": "date-time", "description": "予約完了時刻（ISO 8601形式）" },
       "status": {
         "type": "string",
         "enum": ["confirmed", "failed"],
-        "description": "予約ステータス"
+        "description": "Reservation status"
       }
     },
-    "required": ["reservation_id", "reserved_seats", "reservation_time", "status"]
+    "required": ["reservation_id", "reservation_seats", "reservation_time", "status"]
   }
 }
 ```
@@ -485,8 +485,8 @@
   "method": "reserve_seats",
   "params": {
     "schedule_id": "s001",
-    "seats": ["A1", "A3"],
-    "reservation_password": "mypassword123",
+    "reservation_seats": ["A1", "A3"],
+    "reservation_pw": "mypassword123",
     "customer_name": "田中太郎"
   }
 }
@@ -500,8 +500,8 @@
   "id": 5,
   "result": {
     "reservation_id": "r20260220001",
-    "reservation_password_hash": "$2b$12$...",
-    "reserved_seats": ["A1", "A3"],
+    "reservation_pw_hash": "$2b$12$...",
+    "reservation_seats": ["A1", "A3"],
     "reservation_time": "2026-02-20T12:34:56Z",
     "status": "confirmed"
   }
@@ -546,12 +546,12 @@
         "type": "string",
         "description": "予約ID"
       },
-      "reservation_password": {
+      "reservation_pw": {
         "type": "string",
-        "description": "予約確認用パスワード（プレーンテキスト）"
+        "description": "Reservation password (plaintext)"
       }
     },
-    "required": ["reservation_id", "reservation_password"]
+    "required": ["reservation_id", "reservation_pw"]
   },
   "outputSchema": {
     "type": "object",
@@ -576,11 +576,11 @@
         },
         "required": ["schedule_id", "date", "start_time", "theater_id"]
       },
-      "reserved_seats": { "type": "array", "items": { "type": "string" }, "description": "予約座席IDリスト" },
+      "reservation_seats": { "type": "array", "items": { "type": "string" }, "description": "List of reserved seat IDs" },
       "reservation_time": { "type": "string", "format": "date-time", "description": "予約完了時刻（ISO 8601形式）" },
-      "status": { "type": "string", "description": "予約ステータス（confirmed, cancelled等）" }
+      "status": { "type": "string", "description": "Status of the reservation (e.g., confirmed, cancelled)" }
     },
-    "required": ["reservation_id", "movie", "schedule", "reserved_seats", "reservation_time", "status"]
+    "required": ["reservation_id", "movie", "schedule", "reservation_seats", "reservation_time", "status"]
   }
 }
 ```
@@ -594,7 +594,7 @@
   "method": "get_reservation_details",
   "params": {
     "reservation_id": "r20260220001",
-    "reservation_password": "mypassword123"
+    "reservation_pw": "mypassword123"
   }
 }
 ```
@@ -618,7 +618,7 @@
       "theater_id": "t01",
       "theater_name": "シアター1"
     },
-    "reserved_seats": ["A1", "A3"],
+    "reservation_seats": ["A1", "A3"],
     "reservation_time": "2026-02-20T12:34:56Z",
     "status": "confirmed"
   }
