@@ -1,0 +1,82 @@
+[
+  {
+    "movie_id": "m001",
+    "title": "君の名は。",
+    "genre": "アニメ",
+    "duration": 106,
+    "rating": 4.8,
+    "description": "高校生の男女が不思議な体験を通じて心を通わせる、青春アニメ映画。",
+    "release_date": "2016-08-26",
+    "recommended": true
+  },
+  {
+    "movie_id": "m002",
+    "title": "シン・ゴジラ",
+    "genre": "アクション",
+    "duration": 119,
+    "rating": 4.3,
+    "description": "ゴジラが東京に出現し、国家が総力を挙げて対処する災害アクション作。",
+    "release_date": "2016-07-29",
+    "recommended": true
+  },
+  {
+    "movie_id": "m003",
+    "title": "万引き家族",
+    "genre": "ドラマ",
+    "duration": 121,
+    "rating": 4.2,
+    "description": "貧困にあえぐ家族の絆と社会の目を描いた是枝裕和監督の人間ドラマ。",
+    "release_date": "2018-05-12",
+    "recommended": true
+  },
+  {
+    "movie_id": "m004",
+    "title": "君の膵臓をたべたい",
+    "genre": "ロマンス",
+    "duration": 115,
+    "rating": 4.1,
+    "description": "余命を宣告された少女と彼女と距離を置く男子高校生の切ない恋物語。",
+    "release_date": "2017-07-28",
+    "recommended": false
+  },
+  {
+    "movie_id": "m005",
+    "title": "翔んで埼玉",
+    "genre": "コメディ",
+    "duration": 108,
+    "rating": 3.8,
+    "description": "埼玉県民をディスる東京が舞台の痛快・ド派手コメディ映画。",
+    "release_date": "2019-02-22",
+    "recommended": false
+  },
+  {
+    "movie_id": "m006",
+    "title": "リング",
+    "genre": "ホラー",
+    "duration": 96,
+    "rating": 4.0,
+    "description": "ビデオテープを見た者が一週間後に死ぬという呪いを描くホラーの金字塔。",
+    "release_date": "1998-01-31",
+    "recommended": false
+  },
+  {
+    "movie_id": "m007",
+    "title": "攻殻機動隊",
+    "genre": "SF",
+    "duration": 83,
+    "rating": 4.4,
+    "description": "近未来のネットワーク世界で展開する公安9課の捜査を描いたSFアニメ。",
+    "release_date": "1995-11-18",
+    "recommended": true
+  },
+  {
+    "movie_id": "m008",
+    "title": "容疑者Xの献身",
+    "genre": "サスペンス",
+    "duration": 129,
+    "rating": 4.5,
+    "description": "数学者と刑事が絡む、湯川学シリーズのミステリー・サスペンス映画。",
+    "release_date": "2008-10-04",
+    "recommended": false
+  }
+]
